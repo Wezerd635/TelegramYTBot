@@ -4,11 +4,25 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using YoutubeDLSharp;
 using YoutubeDLSharp.Options;
+using System.Net;
 
 var ytdl = new YoutubeDL();
 ytdl.OutputFolder = "downloads";
 // replace YOUR_BOT_TOKEN below, or set your TOKEN in Project Properties > Debug > Launch profiles UI > Environment variables
 var token = Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN") ?? "YOUR_BOT_TOKEN";
+
+var listener = new HttpListener();
+listener.Prefixes.Add("http://127.0.0.1:7860/");
+listener.Start();
+Task.Run(async() => { await ListenAsync(); });
+async Task ListenAsync() {
+    while (true)
+    {
+        Console.WriteLine("LA");
+        var context = await listener.GetContextAsync();
+        context.Response.StatusCode = (int)HttpStatusCode.OK;
+    }
+}
 
 using var cts = new CancellationTokenSource();
 var bot = new TelegramBotClient(token, cancellationToken: cts.Token);
@@ -21,7 +35,6 @@ bot.OnMessage += OnMessage;
 Console.WriteLine($"@{me.Username} is running... Press Escape to terminate");
 while (Console.ReadKey(true).Key != ConsoleKey.Escape) ;
 cts.Cancel(); // stop the bot
-
 
 async Task OnError(Exception exception, HandleErrorSource source)
 {
